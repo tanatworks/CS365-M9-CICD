@@ -3,6 +3,7 @@ name: Sample App Tests
 on: push
 
 jobs:
+  # === Job ที่ 1: หน้าที่เทสโค้ด (รัน 5 รอบพร้อมกัน) ===
   sample_app_tests:
     name: "Run Tests — Node ${{ matrix.node }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
@@ -32,3 +33,17 @@ jobs:
       - name: Run tests
         working-directory: sample-app
         run: npm test
+
+  # === Job ที่ 2: หน้าที่เข้า AWS (รันแค่ 1 รอบ) ===
+  deploy_to_aws:
+    name: "Authenticate and Deploy"
+    needs: sample_app_tests  # <--- หัวใจสำคัญ: สั่งให้รอ Job 'sample_app_tests' ผ่านให้ครบ 5 ตัวก่อน
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ap-southeast-1
